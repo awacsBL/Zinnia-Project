@@ -23,7 +23,6 @@ def aggregationQuery(pipeline):
     try:
         cursorList = list(cursor)
         jsonData = dumps(cursorList, indent=2)
-        # print(jsonData)
         return jsonData
     finally:
         cursor.close()
@@ -49,7 +48,7 @@ def topHashtagsPipeline():
             u"$sort": SON([(u"tagCount", -1)])
         },
         {
-            u"$limit": 10
+            u"$limit": 100
         }
     ]
 

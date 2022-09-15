@@ -1,8 +1,8 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template
 from main import topHashtagsQuery
 
 app = Flask(__name__)
-app.config['MONGODB_URI'] = 'mongodb://localhost:27017/'
+# app.config['MONGODB_URI'] = 'mongodb://localhost:27017/'
 
 
 @app.route('/')
@@ -10,7 +10,7 @@ def home_page():
     return render_template('home.html')
 
 
-@app.route('/tophashtags')
+@app.route('/top-hashtags')
 def topHashtags():
     res = topHashtagsQuery()
     print(res)
