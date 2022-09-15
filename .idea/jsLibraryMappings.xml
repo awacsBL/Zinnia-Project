@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="JavaScriptLibraryMappings">
+    <file url="file://$PROJECT_DIR$" libraries="{a076d05399, accessibility, bootstrap, export-data, exporting, highcharts, jquery-3.5.1.slim, popper.js, wordcloud}" />
+  </component>
+</project>
