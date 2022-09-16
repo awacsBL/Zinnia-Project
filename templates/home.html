@@ -45,7 +45,7 @@
       <!-- jQuery first, then Popper.js, then Bootstrap JS -->
         <script>
             document.addEventListener("DOMContentLoaded", () => {
-                const topHashtagsUrl = '../top-hashtags';
+                const topHashtagsUrl = '{{url_for('topHashtags')}}';
                 let data = [];
                 fetch(topHashtagsUrl, {method: 'GET'})
                     .then(res => res.json())

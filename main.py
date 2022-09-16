@@ -28,7 +28,7 @@ def aggregationQuery(pipeline):
         cursor.close()
 
 
-def topHashtagsPipeline():
+def topHashtagsPipeline(limit: int):
     return [
         {
             u"$unwind": {
@@ -48,10 +48,10 @@ def topHashtagsPipeline():
             u"$sort": SON([(u"tagCount", -1)])
         },
         {
-            u"$limit": 100
+            u"$limit": limit
         }
     ]
 
 
 def topHashtagsQuery():
-    return aggregationQuery(topHashtagsPipeline())
+    return aggregationQuery(topHashtagsPipeline(100))
