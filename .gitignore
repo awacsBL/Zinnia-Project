@@ -149,3 +149,6 @@ cython_debug/
 
 # MongoDB Queries
 MongoQueriesJS
+.idea/dataSources.local.xml
+.idea/dataSources.xml
+.idea/dataSources/6cb1cd2a-e6da-4d3d-9245-145ed6eea307.xml
