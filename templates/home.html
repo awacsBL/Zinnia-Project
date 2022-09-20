@@ -1,144 +1,375 @@
 <!doctype html>
 <html lang="en">
-   <head>
-       <!-- Required meta tags -->
-       <meta charset="utf-8">
-       <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-       <!-- Bootstrap CSS -->
-       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
-       <script src="https://code.highcharts.com/highcharts.js"></script>
-       <script src="https://code.highcharts.com/modules/wordcloud.js"></script>
-       <script src="https://code.highcharts.com/modules/exporting.js"></script>
-       <script src="https://code.highcharts.com/modules/export-data.js"></script>
-       <script src="https://code.highcharts.com/modules/accessibility.js"></script>
-       <title>Zinnia Project</title>
-       <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
-   </head>
-   <body>
-      <!-- Navbar here -->
-        <nav class="navbar navbar-expand-md navbar-dark bg-dark">
-            <a class="navbar-brand" href="#">Zinnia Project</a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav mr-auto">
-                    <li class="nav-item active">
-                        <a class="nav-link" href="{{url_for('home_page')}}">Home<span class="sr-only">(current)</span></a>
-                    </li>
-                </ul>
-            </div>
-        </nav>
-        <figure class="highcharts-figure">
-            <div id="container"></div>
-            <p class="highcharts-description">
-                Word clouds are used to visualize how often each Hashtag occurred.
-                This word cloud uses 300K tweets about mental health. Hashtags that appear often will appear larger.
-            </p>
-        </figure>
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css"
+          integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/wordcloud.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/export-data.js"></script>
+    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+    <title>Zinnia Project</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+</head>
+<body>
+<!-- Navbar here -->
+<nav class="navbar navbar-expand-md navbar-dark bg-dark">
+    <a class="navbar-brand" href="#">Zinnia Project</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+                <a class="nav-link" href="{{ url_for('home_page') }}">Home<span class="sr-only">(current)</span></a>
+            </li>
+        </ul>
+    </div>
+</nav>
+<figure class="highcharts-figure">
+    <div id="topHashtagsContainer"></div>
+    <p class="highcharts-description">
+        Word clouds are used to visualize how often each Hashtag occurred.
+        This word cloud uses 300K tweets about mental health. Hashtags that appear often will appear larger.
+    </p>
+</figure>
+<figure class="highcharts-figure">
+    <div id="topLanguagesContainer"></div>
+    <p class="highcharts-description">
+        Chart showing use of rotated axis labels and data labels. This can be a
+        way to include more labels in the chart, but note that more labels can
+        sometimes make charts harder to read.
+    </p>
+</figure>
+<figure class="highcharts-figure">
+    <div id="topSourcesContainer"></div>
+    <p class="highcharts-description">
+        Pie charts are very popular for showing a compact overview of a
+        composition or comparison. While they can be harder to read than
+        column charts, they remain a popular choice for small datasets.
+    </p>
+</figure>
+<!-- Future Content here -->
 
-      <!-- Future Content here -->
 
-
-
-      <!-- Optional JavaScript -->
-      <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-        <script>
-            document.addEventListener("DOMContentLoaded", () => {
-                const topHashtagsUrl = '{{url_for('topHashtags')}}';
-                let data = [];
-                fetch(topHashtagsUrl, {method: 'GET'})
-                    .then(res => res.json())
-                    .then(result => {
-                        for (let i = 0; i < result.length; i++) {
-                            let obj = {
-                                name: result[i]._id,
-                                weight: result[i].tagCount
-                            }
-                            data.push(obj);
-                        }
-                        let options = {
-                          accessibility: {
-                            screenReaderSection: {
-                              beforeChartFormat: '<h5>{chartTitle}</h5>' +
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const topHashtagsUrl = '{{url_for('topHashtags')}}';
+        let tagData = [];
+        fetch(topHashtagsUrl, {method: 'GET'})
+            .then(res => res.json())
+            .then(result => {
+                for (let i = 0; i < result.length; i++) {
+                    let obj = {
+                        name: result[i]._id,
+                        weight: result[i].tagCount
+                    }
+                    tagData.push(obj);
+                }
+                let options = {
+                    accessibility: {
+                        screenReaderSection: {
+                            beforeChartFormat: '<h5>{chartTitle}</h5>' +
                                 '<div>{chartSubtitle}</div>' +
                                 '<div>{chartLongdesc}</div>' +
                                 '<div>{viewTableButton}</div>'
-                            }
-                          },
-                          series: [{
-                            type: 'wordcloud',
-                            data: data,
-                            name: 'Occurrences'
-                          }],
-                          title: {
-                            text: 'Top Hashtags'
-                          },
-                          subtitle: {
-                            text: 'Top 100 Hashtags from 300K tweets about mental health'
-                          },
-                          tooltip: {
-                            headerFormat: '<span style="font-size: 16px"><b>{point.key}</b></span><br>'
-                          }
                         }
-                        Highcharts.chart('container', options);
-                    })
-                console.log(data)
+                    },
+                    series: [{
+                        type: 'wordcloud',
+                        data: tagData,
+                        name: 'Occurrences'
+                    }],
+                    title: {
+                        text: 'Top Hashtags'
+                    },
+                    subtitle: {
+                        text: 'Top 100 Hashtags from 300K tweets about mental health'
+                    },
+                    tooltip: {
+                        headerFormat: '<span style="font-size: 16px"><b>{point.key}</b></span><br>'
+                    }
+                }
+                Highcharts.chart('topHashtagsContainer', options);
             })
-        </script>
-        <script src='https://kit.fontawesome.com/a076d05399.js'></script>
-        <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
-        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
-        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
-   </body>
-   <style>
-      body {
-      background-color: #212121;
-      color: white
-      }
-   </style>
-   <style>
-        .highcharts-figure,
-        .highcharts-data-table table {
-            min-width: 320px;
-            max-width: 800px;
-            margin: 1em auto;
+        console.log(tagData)
+    })
+    document.addEventListener("DOMContentLoaded", () => {
+        const topLanguagesUrl = '{{url_for('topLanguages')}}';
+        let langData = [];
+        const langDict = {
+            am: "Amharic (አማርኛ)",
+            ar: "Arabic (العربية)",
+            bg: "Bulgarian (Български)",
+            bn: "Bengali (বাংলা)",
+            bo: "Tibetan (བོད་སྐད)",
+            ca: "Catalan (Català)",
+            ch: "Cherokee (ᏣᎳᎩ)",
+            cs: "Czech (čeština)",
+            da: "Danish (Dansk)",
+            de: "German (Deutsch)",
+            dv: "Maldivian (ދިވެހި)",
+            el: "Greek (Ελληνικά)",
+            en: "English (English)",
+            es: "Spanish (Español)",
+            et: "Estonian (eesti)",
+            fa: "Persian (فارسی)",
+            fi: "Finnish (Suomi)",
+            fr: "French (Français)",
+            gu: "Gujarati (ગુજરાતી)",
+            hi: "Hindi (हिंदी)",
+            ht: "Haitian Creole (Kreyòl ayisyen)",
+            hu: "Hungarian (Magyar)",
+            hy: "Armenian (Հայերեն)",
+            in: "Indonesian (Bahasa Indonesia)",
+            is: "Icelandic (Íslenska)",
+            it: "Italian (Italiano)",
+            iu: "Inuktitut (ᐃᓄᒃᑎᑐᑦ)",
+            iw: "Hebrew (עברית)",
+            ja: "Japanese (日本語)",
+            ka: "Georgian (ქართული)",
+            km: "Khmer (ខ្មែរ)",
+            kn: "Kannada (ಕನ್ನಡ)",
+            ko: "Korean (한국어)",
+            lo: "Lao (ລາວ)",
+            lt: "Lithuanian (Lietuvių)",
+            lv: "Latvian (latviešu valoda)",
+            ml: "Malayalam (മലയാളം)",
+            my: "Myanmar (မြန်မာဘာသာ)",
+            ne: "Nepali (नेपाली)",
+            nl: "Dutch (Nederlands)",
+            no: "Norwegian (Norsk)",
+            or: "Oriya (ଓଡ଼ିଆ)",
+            pa: "Panjabi (ਪੰਜਾਬੀ)",
+            pl: "Polish (Polski)",
+            pt: "Portuguese (Português)",
+            ro: "Romanian (limba română)",
+            ru: "Russian (Русский)",
+            si: "Sinhala (සිංහල)",
+            sk: "Slovak (slovenčina)",
+            sl: "Slovene (slovenski jezik)",
+            sv: "Swedish (Svenska)",
+            ta: "Tamil (தமிழ்)",
+            te: "Telugu (తెలుగు)",
+            th: "Thai (ไทย)",
+            tl: "Tagalog (Tagalog)",
+            tr: "Turkish (Türkçe)",
+            uk: "Ukrainian (українська мова)",
+            und: "Undefined",
+            ur: "Urdu (ﺍﺭﺩﻭ)",
+            vi: "Vietnamese (Tiếng Việt)",
+            zh: "Chinese (中文)"
         }
+        fetch(topLanguagesUrl, {method: 'GET'})
+            .then(res => res.json())
+            .then(result => {
+                for (let i = 0; i < result.length; i++) {
+                    if (result[i]._id in langDict) {
+                        langData.push(new Array(langDict[result[i]._id], result[i].langCount));
+                    } else
+                        continue;
+                }
+                let options = {
+                    chart: {
+                        type: 'column'
+                    },
+                    title: {
+                        text: 'Number of tweets per top 5 languages'
+                    },
+                    xAxis: {
+                        type: 'category',
+                        labels: {
+                            rotation: 0,
+                            style: {
+                                fontSize: '13px',
+                                fontFamily: 'Verdana, sans-serif'
+                            }
+                        }
+                    },
+                    yAxis: {
+                        min: 0,
+                        title: {
+                            text: 'Tweets'
+                        }
+                    },
+                    legend: {
+                        enabled: false
+                    },
+                    tooltip: {
+                        pointFormat: '<b>{point.y}</b> tweets'
+                    },
+                    series: [{
+                        name: 'Population',
+                        data: langData,
+                        dataLabels: {
+                            enabled: true,
+                            rotation: -90,
+                            color: '#FFFFFF',
+                            align: 'right',
+                            format: '{point.y}',
+                            y: 10, // 10 pixels down from the top
+                            style: {
+                                fontSize: '13px',
+                                fontFamily: 'Verdana, sans-serif'
+                            }
+                        }
+                    }]
+                }
+                Highcharts.chart('topLanguagesContainer', options);
+            })
+        console.log(langData)
+    })
+    document.addEventListener("DOMContentLoaded", () => {
+        const topSourcesUrl = '{{url_for('topSources')}}';
+        {#const countUrl = '{{url_for('countDocuments')}}'#}
+        let sourceData = [];
+        let temp = {
+            name: 'Other Sources',
+            y: 0
+        }
+        {#const countDocs = fetch(countUrl, {method: 'GET'})#}
+        const countDocs = 300000
+        fetch(topSourcesUrl, {method: 'GET'})
+            .then(res => res.json())
+            .then(result => {
+                for (let i = 0; i < result.length; i++) {
+                    if (result[i].sourceCount < 150) {
+                        temp.y += result[i].sourceCount;
+                        continue
+                    } else {
+                        let obj = {
+                            name: result[i]._id,
+                            y: result[i].sourceCount / countDocs
+                        }
+                        sourceData.push(obj);
+                    }
+                }
+                if (temp.y > 0) {
+                    temp.y = temp.y / countDocs
+                    sourceData.push(temp);
+                }
+                let options = {
+                    chart: {
+                        plotBackgroundColor: null,
+                        plotBorderWidth: null,
+                        plotShadow: false,
+                        type: 'pie'
+                    },
+                    title: {
+                        text: 'Tweet Sources Distribution'
+                    },
+                    tooltip: {
+                        pointFormat: '{series.name}: <b>{point.percentage:.2f}%</b>'
+                    },
+                    accessibility: {
+                        point: {
+                            valueSuffix: '%'
+                        }
+                    },
+                    plotOptions: {
+                        pie: {
+                            allowPointSelect: true,
+                            cursor: 'pointer',
+                            dataLabels: {
+                                enabled: true,
+                                format: '<b>{point.name}</b>: {point.percentage:.2f} %'
+                            }
+                        }
+                    },
+                    series: [{
+                        name: 'Sources',
+                        colorByPoint: true,
+                        data: sourceData
+                    }]
+                }
+                Highcharts.chart('topSourcesContainer', options);
+            })
+        console.log(sourceData)
+    })
 
-        .highcharts-data-table table {
-            font-family: Verdana, sans-serif;
-            border-collapse: collapse;
-            border: 1px solid #ebebeb;
-            margin: 10px auto;
-            text-align: center;
-            width: 100%;
-            max-width: 500px;
-        }
+</script>
+<script src='https://kit.fontawesome.com/a076d05399.js'></script>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
+        integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"
+        integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV"
+        crossorigin="anonymous"></script>
+</body>
+<style>
+    body {
+        background-color: #212121;
+        color: white
+    }
+</style>
+<style>
+    #topHashtagsContainer {
+        height: 600px;
+    }
 
-        .highcharts-data-table caption {
-            padding: 1em 0;
-            font-size: 1.2em;
-            color: #555;
-        }
+    #topLanguagesContainer {
+        height: 600px;
+    }
 
-        .highcharts-data-table th {
-            font-weight: 600;
-            padding: 0.5em;
-        }
+    #topSourcesContainer {
+        height: 600px;
+    }
 
-        .highcharts-data-table td,
-        .highcharts-data-table th,
-        .highcharts-data-table caption {
-            padding: 0.5em;
-        }
+    .highcharts-figure,
+    .highcharts-data-table table {
+        min-width: 320px;
+        max-width: 800px;
+        margin: 1em auto;
+    }
 
-        .highcharts-data-table thead tr,
-        .highcharts-data-table tr:nth-child(even) {
-            background: #f8f8f8;
-        }
+    .highcharts-data-table table {
+        font-family: Verdana, sans-serif;
+        border-collapse: collapse;
+        border: 1px solid #ebebeb;
+        margin: 10px auto;
+        text-align: center;
+        width: 100%;
+        max-width: 500px;
+    }
 
-        .highcharts-data-table tr:hover {
-            background: #f1f7ff;
-        }
-    </style>
+    .highcharts-data-table caption {
+        padding: 1em 0;
+        font-size: 1.2em;
+        color: #555;
+    }
+
+    .highcharts-data-table th {
+        font-weight: 600;
+        padding: 0.5em;
+    }
+
+    .highcharts-data-table td,
+    .highcharts-data-table th,
+    .highcharts-data-table caption {
+        padding: 0.5em;
+    }
+
+    .highcharts-data-table thead tr,
+    .highcharts-data-table tr:nth-child(even) {
+        background: #f8f8f8;
+    }
+
+    .highcharts-data-table tr:hover {
+        background: #f1f7ff;
+    }
+
+    input[type="number"] {
+        min-width: 50px;
+    }
+
+</style>
 </html>

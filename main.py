@@ -4,7 +4,6 @@ from bson.json_util import dumps, loads
 from dotenv import load_dotenv, find_dotenv
 from pymongo import MongoClient
 
-
 load_dotenv(find_dotenv())
 
 connection_string = os.environ.get("MONGODB_CONNECTION_STRING")
@@ -53,5 +52,55 @@ def topHashtagsPipeline(limit: int):
     ]
 
 
+def topLanguagesPipeline(limit):
+    return [
+        {
+            '$group': {
+                '_id': '$lang',
+                'langCount': {
+                    '$sum': 1
+                }
+            }
+        },
+        {
+            '$sort': {
+                'langCount': -1
+            }
+        },
+        {
+            '$limit': limit
+        }
+    ]
+
+
+def topSourcesPipeline():
+    return [
+        {
+            '$group': {
+                '_id': '$sourceLabel',
+                'sourceCount': {
+                    '$sum': 1
+                }
+            }
+        }, {
+            '$sort': {
+                'sourceCount': -1
+            }
+        }
+    ]
+
+
 def topHashtagsQuery():
     return aggregationQuery(topHashtagsPipeline(100))
+
+
+def topLanguagesQuery():
+    return aggregationQuery(topLanguagesPipeline(5))
+
+
+def topSourcesQuery():
+    return aggregationQuery(topSourcesPipeline())
+
+
+# def countAllDocuments():
+#     return db.collection.find().count()
