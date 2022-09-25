@@ -2,6 +2,7 @@ import os
 from bson.son import SON
 from bson.json_util import dumps, loads
 from dotenv import load_dotenv, find_dotenv
+from flask import jsonify
 from pymongo import MongoClient
 
 load_dotenv(find_dotenv())
@@ -52,7 +53,7 @@ def topHashtagsPipeline(limit: int):
     ]
 
 
-def topLanguagesPipeline(limit):
+def topLanguagesPipeline(limit: int):
     return [
         {
             '$group': {
@@ -90,17 +91,130 @@ def topSourcesPipeline():
     ]
 
 
+def verifiedUsersPipeline():
+    return [
+        {
+            '$group': {
+                '_id': '$user.verified',
+                'verifiedCount': {
+                    '$sum': 1
+                }
+            }
+        }
+    ]
+
+
+def topTweetsScorePipeline(likeWeight: float, replyWeight: float, retweetWeight: float, quoteWeight: float, limit: int):
+    return [
+        {
+            '$project': {
+                '_id': 1,
+                'url': 1,
+                'date': 1,
+                'content': 1,
+                'renderedContent': 1,
+                'id': 1,
+                'user': 1,
+                'replyCount': 1,
+                'retweetCount': 1,
+                'likeCount': 1,
+                'quoteCount': 1,
+                'lang': 1,
+                'media': 1,
+                'retweetedTweet': 1,
+                'quotedTweet': 1,
+                'inReplyToTweetId': 1,
+                'inReplyToUser': 1,
+                'mentionedUsers': 1,
+                'coordinates': 1,
+                'place': 1,
+                'hashtags': 1,
+                'cashtags': 1,
+                'likeScore': {
+                    '$multiply': [
+                        likeWeight, '$likeCount'
+                    ]
+                },
+                'replyScore': {
+                    '$multiply': [
+                        replyWeight, '$replyCount'
+                    ]
+                },
+                'retweetScore': {
+                    '$multiply': [
+                        retweetWeight, '$retweetCount'
+                    ]
+                },
+                'quoteScore': {
+                    '$multiply': [
+                        quoteWeight, '$quoteCount'
+                    ]
+                }
+            }
+        }, {
+            '$project': {
+                '_id': 1,
+                'url': 1,
+                'date': 1,
+                'content': 1,
+                'renderedContent': 1,
+                'id': 1,
+                'user': 1,
+                'replyCount': 1,
+                'retweetCount': 1,
+                'likeCount': 1,
+                'quoteCount': 1,
+                'lang': 1,
+                'media': 1,
+                'retweetedTweet': 1,
+                'quotedTweet': 1,
+                'inReplyToTweetId': 1,
+                'inReplyToUser': 1,
+                'mentionedUsers': 1,
+                'coordinates': 1,
+                'place': 1,
+                'hashtags': 1,
+                'cashtags': 1,
+                'likeScore': 1,
+                'replyScore': 1,
+                'retweetScore': 1,
+                'tweetScore': {
+                    '$add': [
+                        '$likeScore', '$replyScore', '$retweetScore', '$quoteCount'
+                    ]
+                }
+            }
+        }, {
+            '$sort': {
+                'tweetScore': -1
+            }
+        },
+        {
+            '$limit': limit
+        }
+    ]
+
+
 def topHashtagsQuery():
-    return aggregationQuery(topHashtagsPipeline(100))
+    return aggregationQuery(topHashtagsPipeline(200))
 
 
 def topLanguagesQuery():
-    return aggregationQuery(topLanguagesPipeline(5))
+    return aggregationQuery(topLanguagesPipeline(20))
 
 
 def topSourcesQuery():
     return aggregationQuery(topSourcesPipeline())
 
 
-# def countAllDocuments():
-#     return db.collection.find().count()
+def verifiedUsersQuery():
+    return aggregationQuery(verifiedUsersPipeline())
+
+
+def topTweetsScoreQuery():
+    return aggregationQuery(topTweetsScorePipeline(1, 1.5, 2, 2.25, 10))
+
+
+def countAllDocuments():
+    count = collection.count_documents({})
+    return jsonify(count)

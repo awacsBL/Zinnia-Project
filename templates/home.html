@@ -33,24 +33,30 @@
 <figure class="highcharts-figure">
     <div id="topHashtagsContainer"></div>
     <p class="highcharts-description">
-        Word clouds are used to visualize how often each Hashtag occurred.
-        This word cloud uses 300K tweets about mental health. Hashtags that appear often will appear larger.
+        Word clouds are used to visualize how often each Hashtag occurred.<br>
+        This word cloud uses <b>1.5M tweets</b> about mental health. Hashtags that appear often will appear larger.
     </p>
 </figure>
 <figure class="highcharts-figure">
     <div id="topLanguagesContainer"></div>
     <p class="highcharts-description">
-        Chart showing use of rotated axis labels and data labels. This can be a
-        way to include more labels in the chart, but note that more labels can
-        sometimes make charts harder to read.
+        Chart showing the top used languages in these tweets, these languages are interpreted by Twitter API.<br>For
+        more information about accuracy please check this evaluating language identification performance <a
+            href="https://blog.twitter.com/engineering/en_us/a/2015/evaluating-language-identification-performance">blog</a>
+        by Twitter developers.
     </p>
 </figure>
 <figure class="highcharts-figure">
     <div id="topSourcesContainer"></div>
     <p class="highcharts-description">
-        Pie charts are very popular for showing a compact overview of a
-        composition or comparison. While they can be harder to read than
-        column charts, they remain a popular choice for small datasets.
+        Pie chart showing top used device sources for tweeting, everything with less than 150 tweets by source have been
+        summed into "Others"
+    </p>
+</figure>
+<figure class="highcharts-figure">
+    <div id="verifiedUsersContainer"></div>
+    <p class="highcharts-description">
+        Percentage of tweets sent by verified users vs. non verified users
     </p>
 </figure>
 <!-- Future Content here -->
@@ -59,6 +65,11 @@
 <!-- Optional JavaScript -->
 <!-- jQuery first, then Popper.js, then Bootstrap JS -->
 <script>
+    {#let countDocs = 300000#}
+    let countDocs = 1500000;
+    {#const countUrl = '{{url_for('countDocuments')}}'#}
+    {#fetch(countUrl, {method: 'GET'})#}
+    {#    .then(res => countDocs = res.json())#}
     document.addEventListener("DOMContentLoaded", () => {
         const topHashtagsUrl = '{{url_for('topHashtags')}}';
         let tagData = [];
@@ -171,9 +182,8 @@
             .then(result => {
                 for (let i = 0; i < result.length; i++) {
                     if (result[i]._id in langDict) {
-                        langData.push(new Array(langDict[result[i]._id], result[i].langCount));
-                    } else
-                        continue;
+                        langData.push([langDict[result[i]._id], result[i].langCount]);
+                    }
                 }
                 let options = {
                     chart: {
@@ -227,21 +237,18 @@
     })
     document.addEventListener("DOMContentLoaded", () => {
         const topSourcesUrl = '{{url_for('topSources')}}';
-        {#const countUrl = '{{url_for('countDocuments')}}'#}
         let sourceData = [];
         let temp = {
             name: 'Other Sources',
             y: 0
         }
-        {#const countDocs = fetch(countUrl, {method: 'GET'})#}
-        const countDocs = 300000
+        {#const countDocs = 300000#}
         fetch(topSourcesUrl, {method: 'GET'})
             .then(res => res.json())
             .then(result => {
                 for (let i = 0; i < result.length; i++) {
                     if (result[i].sourceCount < 150) {
                         temp.y += result[i].sourceCount;
-                        continue
                     } else {
                         let obj = {
                             name: result[i]._id,
@@ -292,6 +299,67 @@
             })
         console.log(sourceData)
     })
+    document.addEventListener("DOMContentLoaded", () => {
+        const verifiedUsersUrl = '{{url_for('verifiedUsers')}}';
+        let verifiedUsersData = [];
+        fetch(verifiedUsersUrl, {method: 'GET'})
+            .then(res => res.json())
+            .then(result => {
+                for (let i = 0; i < result.length; i++) {
+                    if (result[i]._id === true) {
+                        verifiedUsersData.push(['Verified', result[i].verifiedCount / countDocs])
+                    } else if (result[i]._id === false) {
+                        verifiedUsersData.push(['Not Verified', result[i].verifiedCount / countDocs])
+                    }
+                }
+                let options = {
+                    chart: {
+                        plotBackgroundColor: null,
+                        plotBorderWidth: 0,
+                        plotShadow: false
+                    },
+                    title: {
+                        text: 'Browser<br>shares<br>January<br>2022',
+                        align: 'center',
+                        verticalAlign: 'middle',
+                        y: 60
+                    },
+                    tooltip: {
+                        pointFormat: '{series.name}: <b>{point.percentage:.3f}%</b>'
+                    },
+                    accessibility: {
+                        point: {
+                            valueSuffix: '%'
+                        }
+                    },
+                    plotOptions: {
+                        pie: {
+                            dataLabels: {
+                                enabled: true,
+                                distance: -50,
+                                style: {
+                                    fontWeight: 'bold',
+                                    color: 'white'
+                                }
+                            },
+                            startAngle: -90,
+                            endAngle: 90,
+                            center: ['50%', '75%'],
+                            size: '110%'
+                        }
+                    },
+                    series: [{
+                        type: 'pie',
+                        name: 'Browser share',
+                        innerSize: '50%',
+                        data: verifiedUsersData
+                    }]
+                }
+                Highcharts.chart('verifiedUsersContainer', options);
+            })
+        console.log(verifiedUsersData);
+    })
+
 
 </script>
 <script src='https://kit.fontawesome.com/a076d05399.js'></script>
@@ -321,6 +389,10 @@
     }
 
     #topSourcesContainer {
+        height: 600px;
+    }
+
+    #verifiedUsersContainer {
         height: 600px;
     }
 

@@ -1,5 +1,5 @@
 from flask import Flask, render_template
-from main import topHashtagsQuery, topLanguagesQuery, topSourcesQuery
+from main import topHashtagsQuery, topLanguagesQuery, topSourcesQuery, verifiedUsersQuery, countAllDocuments
 
 app = Flask(__name__)
 
@@ -26,15 +26,22 @@ def topLanguages():
 @app.route('/top-sources')
 def topSources():
     res = topSourcesQuery()
+    # print(res)
+    return res
+
+
+@app.route('/verified-users')
+def verifiedUsers():
+    res = verifiedUsersQuery()
     print(res)
     return res
 
-#
-# @app.route('/count')
-# def countDocuments():
-#     res = countAllDocuments()
-#     # print(res)
-#     return res
+
+@app.route('/count')
+def countDocuments():
+    res = countAllDocuments()
+    print(res)
+    return res
 
 
 if __name__ == '__main__':
