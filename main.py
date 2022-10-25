@@ -1,4 +1,6 @@
 import os
+import re
+
 from bson.son import SON
 from bson.json_util import dumps, loads
 from dotenv import load_dotenv, find_dotenv
@@ -190,6 +192,77 @@ def topTweetsScorePipeline(likeWeight: float, replyWeight: float, retweetWeight:
             }
         },
         {
+            '$limit': limit
+        }
+    ]
+
+
+def topCountriesPipeline():
+    return [
+        {
+            '$project': {
+                'country': {
+                    '$split': [
+                        '$user.location', ' '
+                    ]
+                },
+                'country2': {
+                    '$split': [
+                        '$user.location', ','
+                    ]
+                }
+            }
+        }, {
+            '$unwind': {
+                'path': '$country'
+            }
+        }, {
+            '$match': {
+                'country': re.compile(r"[A-Z]{2}")
+            }
+        }, {
+            '$group': {
+                '_id': {
+                    'state': '$country'
+                },
+                'count': {
+                    '$sum': 1
+                }
+            }
+        }, {
+            '$sort': {
+                'count': -1
+            }
+        }
+    ]
+
+
+def topTerms(limit: int):
+    return [
+        {
+            '$project': {
+                'terms': {
+                    '$split': [
+                        '$content', ' '
+                    ]
+                }
+            }
+        }, {
+            '$unwind': {
+                'path': '$terms'
+            }
+        }, {
+            '$group': {
+                '_id': '$terms',
+                'count': {
+                    '$sum': 1
+                }
+            }
+        }, {
+            '$sort': {
+                'count': -1
+            }
+        }, {
             '$limit': limit
         }
     ]
